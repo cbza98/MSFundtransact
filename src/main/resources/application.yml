@@ -1,0 +1,19 @@
+spring:
+  data:
+      mongodb:
+        uri: mongodb+srv://trainingdbnttdata:zMaT0bwJ86xps4wN@proyectobootcamp.jyiov.mongodb.net/fundtransact
+  application:
+    name: ms-fund-transact
+server:
+  port: 9090
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: false
+  instance:
+    hostname: localhost
