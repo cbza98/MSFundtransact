@@ -32,21 +32,36 @@ public class AccountService implements IAccountService {
 
 	@Override
 	public Mono<Account> save(Account a) {
-		WebClient client = WebClient.builder().baseUrl("http://localhost:8080/BusinessPartnerService")
+
+		
+		WebClient businessPartnerClient = WebClient.builder().baseUrl("http://localhost:9090/BusinessPartnerService")
+
+				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+		
+		WebClient creditCardClient = WebClient.builder().baseUrl("http://localhost:9092/CreditCardService")
 				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
 
-		return client.get()
+
+		
+		return businessPartnerClient.get()
 				.uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(a.getCodeBusinessPartner()))
 				.retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExists()))
-				.bodyToMono(BusinessPartnerBean.class).filter(r -> r.getType().equals("C"))
 
-				.flatMap(t -> Mono.just(a).filter(r -> r.getAccountType().equals("CO"))// Si es tipo CUENTA CORRIENTE
+				.bodyToMono(BusinessPartnerBean.class)// Hasta aca es la obtencion del web client
+				// Filtro si es C= Compañia
+				.filter(r -> r.getType().equals("C"))
+				.flatMap(t -> Mono.just(a).filter(r -> r.getAccountType().equals("CO"))// Si es tipo CUENTA CORRIENTE					
+						
+						
+
 						// GUARDA EN EL REPOSITORIO
 						.flatMap(f -> {
-
+							
 							a.setAccountId(AccountGeneratorValues.IdentityGenerate(a.getAccountType(),
 									a.getCodeBusinessPartner()));
 							a.setAccountNumber(AccountGeneratorValues.NumberGenerate(a.getAccountType()));
+					
+
 							return repository.save(a);
 
 						})
@@ -90,7 +105,23 @@ public class AccountService implements IAccountService {
 		return repository.findById(Id);
 	}
 
+	@Override
+	public Mono<ResponseEntity<Account>> update(String id, Account _request) {
+		return repository.findById(id).flatMap(a -> {
+			a.setAccountName(_request.getAccountName());
+			a.setAccountNumber(_request.getAccountNumber());
+			a.setAccountType(_request.getAccountType());
+			a.setCodeBusinessPartner(_request.getCodeBusinessPartner());
+			a.setDate_Opened(_request.getDate_Opened());
+			a.setValid(_request.getValid());
+			return repository.save(a);
+		}).map(updated -> new ResponseEntity<>(updated, HttpStatus.OK))
+				.defaultIfEmpty(new ResponseEntity<>(HttpStatus.OK));
+	}
+
 	public Flux<Account> saveAll(List<Account> a) {
 		return repository.saveAll(a);
 	}
+	
+	
 }
