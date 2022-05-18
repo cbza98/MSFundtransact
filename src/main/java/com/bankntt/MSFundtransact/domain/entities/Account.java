@@ -1,6 +1,7 @@
 package com.bankntt.MSFundtransact.domain.entities;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -36,8 +37,9 @@ public class Account {
 	private Date date_Opened;
 	@NotNull	
 	private Boolean valid;
-	
 	private Boolean minAmountIsRequired;
 	private Boolean maintenanceComision;
+	private List<Holder> holders;
+	private List<Signer> signers;
 
 }

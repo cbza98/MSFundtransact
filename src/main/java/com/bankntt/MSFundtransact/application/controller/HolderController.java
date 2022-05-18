@@ -20,25 +20,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.support.WebExchangeBindException;
 
-import com.bankntt.MSFundtransact.domain.entities.Account;
-import com.bankntt.MSFundtransact.infraestructure.services.AccountService;
+import com.bankntt.MSFundtransact.domain.entities.Holder;
+import com.bankntt.MSFundtransact.infraestructure.services.HolderService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/Account")
-public class AccountController {
+@RequestMapping("/api/Holder")
+public class HolderController {
 	@Autowired
-	private AccountService service;
+	private HolderService service;
 
 	@GetMapping
-	public Mono<ResponseEntity<Flux<Account>>> FindAll() {
+	public Mono<ResponseEntity<Flux<Holder>>> FindAll() {
 		return Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.findAll()));
 	}
 
 	@GetMapping("/{id}")
-	public Mono<Account> findById(@PathVariable String id) {
+	public Mono<Holder> findById(@PathVariable String id) {
 		return service.findById(id);
 	}
 
@@ -49,15 +49,15 @@ public class AccountController {
 	}
 
 	@PostMapping
-	public Mono<ResponseEntity<Map<String, Object>>> Create(@Valid @RequestBody Mono<Account> request) {
+	public Mono<ResponseEntity<Map<String, Object>>> Create(@Valid @RequestBody Mono<Holder> request) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		return request.flatMap(a -> {
 			return service.save(a).map(c -> {
-				response.put("Cuenta", c);
-				response.put("mensaje", "Cuenta creada con exito");
-				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+				response.put("Holder", c);
+				response.put("message", "Succesfull Holder Created");
+				return ResponseEntity.created(URI.create("/api/Holder/".concat(c.getHolderid())))
 						.contentType(MediaType.APPLICATION_JSON).body(response);
 			});
 		}).onErrorResume(t -> {
@@ -74,19 +74,6 @@ public class AccountController {
 
 					});
 
-		});
-	}
-
-	@PostMapping("/saveBulk")
-	public Mono<ResponseEntity<Map<String, Object>>> saveBulk(@RequestBody Flux<Account> businessPartnerList) {
-
-		Map<String, Object> response = new HashMap<>();
-
-		return businessPartnerList.collectList().flatMap(a -> service.saveAll(a).collectList()).map(c -> {
-			response.put("BusinessPartners", c);
-			response.put("mensaje", "Succesfull BusinessPartner Created");
-			return ResponseEntity.created(URI.create("/api/BusinessPartner/")).contentType(MediaType.APPLICATION_JSON)
-					.body(response);
 		});
 	}
 
