@@ -1,6 +1,11 @@
 package com.bankntt.MSFundtransact.infraestructure.services;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -10,9 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.bankntt.MSFundtransact.application.exception.EntityNotExists;
+import com.bankntt.MSFundtransact.application.exception.AccountNotCreatedException;
+import com.bankntt.MSFundtransact.application.exception.EntityNotExistsException;
 import com.bankntt.MSFundtransact.application.helpers.AccountGeneratorValues;
 import com.bankntt.MSFundtransact.domain.beans.BusinessPartnerBean;
+import com.bankntt.MSFundtransact.domain.beans.CompanyCheckingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.PeopleCheckingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.SavingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.TimeDepositAccountDTO;
 import com.bankntt.MSFundtransact.domain.entities.Account;
 import com.bankntt.MSFundtransact.domain.repository.AccountRepository;
 import com.bankntt.MSFundtransact.infraestructure.interfaces.IAccountService;
@@ -23,6 +33,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class AccountService implements IAccountService {
 
+	private Predicate<Long> LongZero = a -> (a == 0);
+	
 	@Autowired
 	AccountRepository repository;
 
@@ -30,67 +42,7 @@ public class AccountService implements IAccountService {
 	public Flux<Account> findAll() {
 		return repository.findAll();
 	}
-
-	@Override
-	public Mono<Account> save(Account a) {
-		
-		WebClient businessPartnerClient = WebClient.builder().baseUrl("http://localhost:9090/BusinessPartnerService")
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-		
-		WebClient creditCardClient = WebClient.builder().baseUrl("http://localhost:9092/CreditCardService")
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-
-
-		
-		return businessPartnerClient.get()
-				.uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(a.getCodeBusinessPartner()))
-				.retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExists()))
-				.bodyToMono(BusinessPartnerBean.class)// Hasta aca es la obtencion del web client
-				// Filtro si es C= Compañia
-				.filter(r -> r.getType().equals("C"))
-				.flatMap(t -> Mono.just(a).filter(r -> r.getAccountType().equals("CO"))// Si es tipo CUENTA CORRIENTE					
-						
-						
-						// GUARDA EN EL REPOSITORIO
-						.flatMap(f -> {
-							
-							a.setAccountId(AccountGeneratorValues.IdentityGenerate(a.getAccountType(),
-									a.getCodeBusinessPartner()));
-							a.setAccountNumber(AccountGeneratorValues.NumberGenerate(a.getAccountType()));
-							
-							return repository.save(a);
-
-						})
-						// DE LO CONTRARIO LANZA ERROR
-						.switchIfEmpty(Mono.error(new EntityNotExists())))// AccountNotCreatedException
-				.switchIfEmpty(repository
-						.countByAccountTypeAndCodeBusinessPartner(a.getAccountType(), a.getCodeBusinessPartner())
-						// Obtiene
-						// el
-						// Count
-						// segun los
-						// parametros
-						// Realiza el filtro de Cuenta de Personas
-						.filter(r -> (a.getAccountType().equals("CO") && r == 0) || // Si es igual a cuenta corriente y
-																					// el
-																					// conteo es 0
-						// O
-								(a.getAccountType().equals("AH") && r == 0) || // Si es igual a cuenta ahorros y el
-																				// conteo
-																				// es 0
-								// O
-								(a.getAccountType().equals("PL"))// Si es Cuenta Plazo fijo
-						).flatMap(r -> {
-
-							a.setAccountId(AccountGeneratorValues.IdentityGenerate(a.getAccountType(),
-									a.getCodeBusinessPartner()));
-							a.setAccountNumber(AccountGeneratorValues.NumberGenerate(a.getAccountType()));
-							return repository.save(a);
-						})// GUARDA EN EL REPOSITORIO
-						.switchIfEmpty(Mono.error(new EntityNotExists())));// AccountNotCreatedException
-
-	}
-
+	
 	@Override
 	public Mono<Account> delete(String Id) {
 		return repository.findById(Id).flatMap(deleted -> repository.delete(deleted).then(Mono.just(deleted)));
@@ -100,7 +52,6 @@ public class AccountService implements IAccountService {
 	public Mono<Account> findById(String Id) {
 		return repository.findById(Id);
 	}
-
 
 	@Override
 	public Mono<ResponseEntity<Account>> update(String id, Account _request) {
@@ -118,8 +69,144 @@ public class AccountService implements IAccountService {
 
 	@Override
 	public Flux<Account> saveAll(List<Account> a) {
+		
 		return repository.saveAll(a);
 	}
+
+	@Override
+	public Mono<Account> createSavingAccount(SavingAccountDTO account) {
+		
+		return getBusinessPartner(account.getCodeBusinessPartner()).then(
+				repository.countByAccountTypeAndCodeBusinessPartner("AH", account.getCodeBusinessPartner())
+				.filter(LongZero::test)
+				.then(Mono.just(account)
+						  .flatMap(FuctionalSaveAccount::apply)
+						  .switchIfEmpty(Mono.error(new AccountNotCreatedException())))
+		);
+	}
+
+	@Override
+	public Mono<Account> createTimeDepositAccount(TimeDepositAccountDTO account) {
+					
+		return getBusinessPartner(account.getCodeBusinessPartner()).then(
+			Mono.defer(()->{
+				Account a = Account.builder()
+							.accountId(AccountGeneratorValues.IdentityGenerate("PL",account.getCodeBusinessPartner()))
+							.accountNumber(AccountGeneratorValues.NumberGenerate("PL"))
+							.accountName("Time Deposit Account")
+							.accountType("PL")
+							.valid(true)
+							.codeBusinessPartner(account.getCodeBusinessPartner())
+							.date_Opened(new Date()).build();
+							
+							return repository.save(a);
+			}));
+	}
+	
+	@Override
+	public Mono<Account> createPeopleCheckingAccount(PeopleCheckingAccountDTO account) {
+					
+		return getBusinessPartner(account.getCodeBusinessPartner()).then(
+				repository.countByAccountTypeAndCodeBusinessPartner("CO", account.getCodeBusinessPartner())
+				.filter(LongZero::test)
+				.then(Mono.defer(()->{
+					Account a = Account.builder()
+							.accountId(AccountGeneratorValues.IdentityGenerate("CO",account.getCodeBusinessPartner()))
+							.accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+							.accountName("People Checking Account")
+							.accountType("CO")
+							.valid(true)
+							.codeBusinessPartner(account.getCodeBusinessPartner())
+							.date_Opened(new Date()).build();
+					
+							return repository.save(a);
+				
+				}).switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
+	}
+
+	@Override
+	public Mono<Account> createCompanyCheckingAccount(CompanyCheckingAccountDTO account) {
+			
+	
+		
+		return getBusinessPartner(account.getCodeBusinessPartner()).then(
+				
+					Mono.defer(()->{
+						if(account.getSubType().equals("PY")) {	
+							
+							//validacion tarjeta
+							Account a = Account.builder()
+										.accountId(AccountGeneratorValues.IdentityGenerate("CO",account.getCodeBusinessPartner()))
+										.accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+										.accountName("Pyme Company Checking Account")
+										.accountType("CO")
+										.valid(true)
+										.codeBusinessPartner(account.getCodeBusinessPartner())
+										.date_Opened(new Date()).build();
+								
+							return repository.save(a);
+						}
+						else {
+							 Account a = Account.builder()
+										.accountId(AccountGeneratorValues.IdentityGenerate("CO",account.getCodeBusinessPartner()))
+										.accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+										.accountName("Standart Company Checking Account")
+										.accountType("CO")
+										.subType(account.getSubType())
+										.valid(true)
+										.codeBusinessPartner(account.getCodeBusinessPartner())
+										.date_Opened(new Date()).build();
+							 return repository.save(a);
+						}
+				}));
+	}
+	
+	private Mono<BusinessPartnerBean> getBusinessPartner(String businessPartnerId){
+		
+		WebClient businessPartnerClient = WebClient.builder().baseUrl("http://localhost:9090/BusinessPartnerService")
+				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+	
+		return businessPartnerClient.get()
+			   .uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(businessPartnerId))
+			   .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExistsException()))
+			   .bodyToMono(BusinessPartnerBean.class);
+		
+	}
+	
+	
+	private  Function<SavingAccountDTO, Mono<Account>> FuctionalSaveAccount=
+
+account -> {	
+		if(account.getSubType().equals("VI")) {
+			 
+			 //validacion tarjeta credito
+			 Account a = Account.builder()
+						.accountId(AccountGeneratorValues.IdentityGenerate("AH",account.getCodeBusinessPartner()))
+						.accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
+						.accountName("VIP Saving Account")
+						.accountType("AH")
+						.subType(account.getSubType())
+						.valid(true)
+						.codeBusinessPartner(account.getCodeBusinessPartner())
+						.date_Opened(new Date()).build();
+			
+			return repository.save(a);
+		}
+		else{
+			
+			 Account a = Account.builder()
+						.accountId(AccountGeneratorValues.IdentityGenerate("AH",account.getCodeBusinessPartner()))
+						.accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
+						.accountName("Standart Saving Account")
+						.accountType("AH")
+						.subType(account.getSubType())
+						.valid(true)
+						.codeBusinessPartner(account.getCodeBusinessPartner())
+						.date_Opened(new Date()).build();
+			 return repository.save(a);
+		}
+
+	};
 	
 	
 }
