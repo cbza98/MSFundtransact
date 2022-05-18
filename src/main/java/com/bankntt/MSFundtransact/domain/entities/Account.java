@@ -34,7 +34,10 @@ public class Account {
 	private String accountType;
 	@NotNull
 	private Date date_Opened;
-	@NotNull
+	@NotNull	
 	private Boolean valid;
+	
+	private Boolean minAmountIsRequired;
+	private Boolean maintenanceComision;
 
 }
