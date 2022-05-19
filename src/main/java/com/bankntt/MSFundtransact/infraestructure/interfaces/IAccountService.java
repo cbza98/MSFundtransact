@@ -15,25 +15,28 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface IAccountService {
-	public Flux<Account> findAll();
+	Flux<Account> findAll();
 
-	public Mono<Account> createSavingAccount(SavingAccountDTO account);
+	Mono<Account> createSavingAccount(SavingAccountDTO account);
 	
-	public Mono<Account> createTimeDepositAccount(TimeDepositAccountDTO account);
+	Mono<Account> createTimeDepositAccount(TimeDepositAccountDTO account);
 	
-	public Mono<Account> createPeopleCheckingAccount(PeopleCheckingAccountDTO account);
+	Mono<Account> createPeopleCheckingAccount(PeopleCheckingAccountDTO account);
 	
-	public Mono<Account> createCompanyCheckingAccount(CompanyCheckingAccountDTO account);
+	Mono<Account> createCompanyCheckingAccount(CompanyCheckingAccountDTO account);
 	
-	public Mono<Account> delete(String id);
+	Mono<Account> delete(String id);
 
-	public Mono<Account> findById(String id);
-	public Mono<Account> findByAccountNumber(String id);
-	public Mono<ResponseEntity<Account>> update(String id, Account request);
-	Mono<ResponseEntity<Account>> updatebalancedp(String id, BigDecimal balance);
+	Mono<Account> findById(String id);
+	
+	Mono<Account> findByAccountNumber(String id);
+	
+	Mono<Account> update(String id, Account request);
+	
+	Mono<Account> updateBalanceDp(String id, BigDecimal balance);
+	
+	Mono<Account> updateBalanceWt(String id, BigDecimal balance);
 
-	Mono<ResponseEntity<Account>> updatebalancewt(String id, BigDecimal balance);
-
-	public Flux<Account> saveAll(List<Account> a);
+	Flux<Account> saveAll(List<Account> a);
 
 }

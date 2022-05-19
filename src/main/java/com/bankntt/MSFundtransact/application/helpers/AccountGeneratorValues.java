@@ -1,7 +1,6 @@
 package com.bankntt.MSFundtransact.application.helpers;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 public class AccountGeneratorValues {
 
@@ -9,7 +8,7 @@ public class AccountGeneratorValues {
     public static String NumberGenerate(String _accountType) {
         String start = _accountType;
         SecureRandom value = new SecureRandom(); // Compliant for security-sensitive use cases
-        byte bytes[] = new byte[20];
+        byte[] bytes = new byte[20];
         value.nextBytes(bytes);
         // Generar dos valores en base a los tipos de cuenta
         int v1 = value.nextInt(10);

@@ -1,5 +1,5 @@
 package com.bankntt.MSFundtransact.domain.beans;
 
-public class AccountTransferenceDTO {
+public class AccountTransferDTO {
 
 }

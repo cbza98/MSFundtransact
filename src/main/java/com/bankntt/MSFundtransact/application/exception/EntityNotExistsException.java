@@ -6,7 +6,7 @@ public class EntityNotExistsException extends Exception {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	final private String message = "The Business Partner doesn't exists";
+	private String message = "The Resource you are looking for doesn't exists or has been deleted";
 
 	public EntityNotExistsException() {
 

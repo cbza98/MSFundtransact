@@ -28,7 +28,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/Account")
+@RequestMapping("/MsFundTransact/Entities/Accounts")
 public class AccountController {
 	@Autowired
 	private AccountService service;
@@ -49,14 +49,12 @@ public class AccountController {
 
 		Map<String, Object> response = new HashMap<>();
 
-		return request.flatMap(a -> {
-			return service.createSavingAccount(a).map(c -> {
-				response.put("Cuenta", c);
-				response.put("mensaje", "Cuenta creada con exito");
-				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-						.contentType(MediaType.APPLICATION_JSON).body(response);
-			});
-		});
+		return request.flatMap(a -> service.createSavingAccount(a).map(c -> {
+			response.put("Cuenta", c);
+			response.put("mensaje", "Cuenta creada con exito");
+			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+					.contentType(MediaType.APPLICATION_JSON).body(response);
+		}));
 	}
 	
 	@PostMapping("/CreateTimeDepositAccount")
@@ -64,14 +62,12 @@ public class AccountController {
 
 		Map<String, Object> response = new HashMap<>();
 
-		return request.flatMap(a -> {
-			return service.createTimeDepositAccount(a).map(c -> {
-				response.put("Cuenta", c);
-				response.put("mensaje", "Cuenta creada con exito");
-				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-						.contentType(MediaType.APPLICATION_JSON).body(response);
-			});
-		});
+		return request.flatMap(a -> service.createTimeDepositAccount(a).map(c -> {
+			response.put("Cuenta", c);
+			response.put("mensaje", "Cuenta creada con exito");
+			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+					.contentType(MediaType.APPLICATION_JSON).body(response);
+		}));
 	}
 	
 	@PostMapping("/CreatePeopleCheckingAccount")
@@ -79,14 +75,12 @@ public class AccountController {
 
 		Map<String, Object> response = new HashMap<>();
 
-		return request.flatMap(a -> {
-			return service.createPeopleCheckingAccount(a).map(c -> {
-				response.put("Cuenta", c);
-				response.put("mensaje", "Cuenta creada con exito");
-				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-						.contentType(MediaType.APPLICATION_JSON).body(response);
-			});
-		});
+		return request.flatMap(a -> service.createPeopleCheckingAccount(a).map(c -> {
+			response.put("Cuenta", c);
+			response.put("mensaje", "Cuenta creada con exito");
+			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+					.contentType(MediaType.APPLICATION_JSON).body(response);
+		}));
 	}
 	
 	@PostMapping("/CreateCompanyCheckingAccount")
@@ -94,14 +88,12 @@ public class AccountController {
 
 		Map<String, Object> response = new HashMap<>();
 
-		return request.flatMap(a -> {
-			return service.createCompanyCheckingAccount(a).map(c -> {
-				response.put("Cuenta", c);
-				response.put("mensaje", "Cuenta creada con exito");
-				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-						.contentType(MediaType.APPLICATION_JSON).body(response);
-			});
-		});
+		return request.flatMap(a -> service.createCompanyCheckingAccount(a).map(c -> {
+			response.put("Cuenta", c);
+			response.put("mensaje", "Cuenta creada con exito");
+			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+					.contentType(MediaType.APPLICATION_JSON).body(response);
+		}));
 	}
 	@PostMapping("/saveBulk")
 	public Mono<ResponseEntity<Map<String, Object>>> saveBulk(@RequestBody Flux<Account> businessPartnerList) {

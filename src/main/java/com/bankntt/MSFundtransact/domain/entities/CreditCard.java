@@ -18,15 +18,19 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class CreditCard {
-	@NotNull
-	private String cardname;
 	@Id
-	private String cardnumber;
+	private String cardNumber;
 	@NotNull
-	private Date ddate;
+	private String cardName;
+	@NotNull
+	private Date expiringDate;
 	@NotNull
 	private String ccv;
 	@NotNull
 	private Boolean valid;
 
+	@NotNull
+	private Date openDate;
+	@NotNull
+	private String codeBusinessPartner;
 }

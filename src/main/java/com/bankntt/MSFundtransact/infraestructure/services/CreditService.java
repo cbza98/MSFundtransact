@@ -1,14 +1,12 @@
 package com.bankntt.MSFundtransact.infraestructure.services;
 
-import com.bankntt.MSFundtransact.application.exception.EntityNotExists;
+import com.bankntt.MSFundtransact.application.exception.EntityNotExistsException;
 import com.bankntt.MSFundtransact.domain.beans.BusinessPartnerBean;
 import com.bankntt.MSFundtransact.domain.beans.CreditCardPaymentDTO;
 import com.bankntt.MSFundtransact.domain.beans.CreditPaymentDTO;
 import com.bankntt.MSFundtransact.domain.beans.NewCreditDTO;
 import com.bankntt.MSFundtransact.domain.entities.Credit;
-import com.bankntt.MSFundtransact.domain.entities.CreditCard;
 import com.bankntt.MSFundtransact.domain.repository.CreditRepository;
-import com.bankntt.MSFundtransact.infraestructure.interfaces.ICreditCardService;
 import com.bankntt.MSFundtransact.infraestructure.interfaces.ICreditService;
 import com.bankntt.MSFundtransact.infraestructure.interfaces.ICreditTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +35,7 @@ public class CreditService implements ICreditService, ICreditTransactionService 
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
         return client.get()
                 .uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(a.getCodebusinesspartner()))
-                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExists()))
+                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExistsException()))
                 .bodyToMono(BusinessPartnerBean.class)
                 .filter(r -> r.getType().equals("C") || r.getType().equals("P"))
                 .flatMap(f -> {
@@ -45,7 +43,7 @@ public class CreditService implements ICreditService, ICreditTransactionService 
                     //	a.getCreatedate(new Date().getDateInstance);
                     return repository.save(a);
                 })
-                .switchIfEmpty(Mono.error(new EntityNotExists())
+                .switchIfEmpty(Mono.error(new EntityNotExistsException())
                 );// AccountNotCreatedException
     }
 

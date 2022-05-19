@@ -5,7 +5,6 @@ import com.bankntt.MSFundtransact.domain.beans.*;
 import com.bankntt.MSFundtransact.domain.entities.Transaction;
 import com.bankntt.MSFundtransact.domain.enums.TransactionType;
 import com.bankntt.MSFundtransact.domain.repository.TransactionRepository;
-import com.bankntt.MSFundtransact.infraestructure.interfaces.IAccountTransactionsService;
 import com.bankntt.MSFundtransact.infraestructure.interfaces.ITransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Service
-public class TransactionService implements ITransactionService, IAccountTransactionsService {
+public class TransactionService implements ITransactionService{
 
     //Attribute
     @Autowired
@@ -26,52 +25,38 @@ public class TransactionService implements ITransactionService, IAccountTransact
     @Autowired
     AccountService accountService;
 
-    //Master
+    //Crud
     @Override
-    public Flux<Transaction> findAll() {
-        return null;
-    }
+	public Flux<Transaction> findAll() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Mono<Transaction> createSavingAccount(SavingAccountDTO account) {
-        return null;
-    }
+	@Override
+	public Mono<Transaction> delete(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Mono<Transaction> createTimeDepositAccount(TimeDepositAccountDTO account) {
-        return null;
-    }
+	@Override
+	public Mono<Transaction> findById(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Mono<Transaction> createPeopleCheckingAccount(PeopleCheckingAccountDTO account) {
-        return null;
-    }
+	@Override
+	public Mono<ResponseEntity<Transaction>> update(String id, Transaction request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Mono<Transaction> createCompanyCheckingAccount(CompanyCheckingAccountDTO account) {
-        return null;
-    }
-
-    @Override
-    public Mono<Transaction> delete(String id) {
-        return null;
-    }
-
-    @Override
-    public Mono<Transaction> findById(String id) {
-        return null;
-    }
-
-    @Override
-    public Mono<ResponseEntity<Transaction>> update(String id, Transaction request) {
-        return null;
-    }
-
-    @Override
-    public Flux<Transaction> saveAll(List<Transaction> a) {
-        return null;
-    }
-    //Account
+	@Override
+	public Flux<Transaction> saveAll(List<Transaction> a) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+    
+    //Transaction
 
     @Override
     public Mono<Transaction> doAccountDeposit(AccountOperationDTO dto) {
@@ -92,12 +77,12 @@ public class TransactionService implements ITransactionService, IAccountTransact
     }
 
     @Override
-    public Mono<Transaction> TransferBetweenAccounts(AccountTransferenceDTO dto) {
+    public Mono<Transaction> TransferBetweenAccounts(AccountTransferDTO dto) {
         return null;
     }
 
     @Override
-    public Mono<Transaction> doTransferToThirdParty(AccountTransferenceDTO dto) {
+    public Mono<Transaction> doTransferToThirdParty(AccountTransferDTO dto) {
         return null;
     }
 
@@ -115,9 +100,10 @@ public class TransactionService implements ITransactionService, IAccountTransact
                 .createDate(new Date()).build();
 
          _t =  trepository.save(t);
-        accountService.updatebalancedp(t.getToaccount(),t.getAmount());
+        accountService.updateBalanceDp(t.getToaccount(),t.getAmount());
         return _t;
     };
+    
     private final Function<AccountOperationDTO, Mono<Transaction>> savewithdrawal = deposit -> {
 
         Transaction t;
@@ -129,7 +115,9 @@ public class TransactionService implements ITransactionService, IAccountTransact
                 .createDate(new Date()).build();
 
         _t =  trepository.save(t);
-        accountService.updatebalancewt(t.getToaccount(),t.getAmount());
+        accountService.updateBalanceWt(t.getToaccount(),t.getAmount());
         return _t;
     };
+
+	
 }
