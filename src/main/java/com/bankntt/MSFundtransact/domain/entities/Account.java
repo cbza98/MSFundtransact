@@ -1,11 +1,14 @@
 package com.bankntt.MSFundtransact.domain.entities;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 
 import com.bankntt.MSFundtransact.domain.validation.Account.IsTypeAccount;
@@ -29,7 +32,9 @@ public class Account {
 	@NotNull
 	private String codeBusinessPartner;
 	private String accountNumber;
-	
+	@JsonIgnore
+	@Digits(integer =20, fraction=6)
+	private BigDecimal balance;
 	@NotNull
 	@NotBlank
 	@IsTypeAccount

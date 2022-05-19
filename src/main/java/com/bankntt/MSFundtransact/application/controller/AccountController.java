@@ -34,7 +34,7 @@ public class AccountController {
 	private AccountService service;
 
 	@GetMapping
-	public Mono<ResponseEntity<Flux<Account>>> FindAll() {
+	public Mono<ResponseEntity<Flux<Account>>> findAll() {
 		return Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.findAll()));
 	}
 
