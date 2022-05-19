@@ -1,5 +1,6 @@
 package com.bankntt.MSFundtransact.infraestructure.interfaces;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -27,9 +28,12 @@ public interface IAccountService {
 	public Mono<Account> delete(String id);
 
 	public Mono<Account> findById(String id);
-	
+	public Mono<Account> findByAccountNumber(String id);
 	public Mono<ResponseEntity<Account>> update(String id, Account request);
-	
+	Mono<ResponseEntity<Account>> updatebalancedp(String id, BigDecimal balance);
+
+	Mono<ResponseEntity<Account>> updatebalancewt(String id, BigDecimal balance);
+
 	public Flux<Account> saveAll(List<Account> a);
 
 }
