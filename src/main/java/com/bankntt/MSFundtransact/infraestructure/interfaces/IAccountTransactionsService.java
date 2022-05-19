@@ -9,7 +9,7 @@ public interface IAccountTransactionsService {
 	
 	public Mono<?> doAccountDeposit(AccountDepositDTO dto);
 	
-	public Mono<?> doTransferBetweenAccounts(AccountTransferenceDTO dto);
+	public Mono<?> TransferBetweenAccounts(AccountTransferenceDTO dto);
 	
 	public Mono<?> doTransferToThirdParty(AccountTransferenceDTO dto);
 	

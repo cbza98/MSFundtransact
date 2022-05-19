@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -39,7 +38,6 @@ public class AccountService implements IAccountService {
 	public Flux<Account> findAll() {
 		return repository.findAll();
 	}
-	
 	@Override
 	public Mono<Account> delete(String Id) {
 		return repository.findById(Id).flatMap(deleted -> repository.delete(deleted).then(Mono.just(deleted)));
@@ -64,7 +62,6 @@ public class AccountService implements IAccountService {
 				.defaultIfEmpty(new ResponseEntity<>(HttpStatus.OK));
 	}
 
-	@Override
 	public Flux<Account> saveAll(List<Account> a) {
 		
 		return repository.saveAll(a);
