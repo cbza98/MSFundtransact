@@ -2,10 +2,8 @@ package com.bankntt.MSFundtransact.infraestructure.services;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +31,6 @@ import reactor.core.publisher.Mono;
 @Service
 public class AccountService implements IAccountService {
 
-	private Predicate<Long> LongZero = a -> (a == 0);
 	
 	@Autowired
 	AccountRepository repository;
@@ -78,7 +75,7 @@ public class AccountService implements IAccountService {
 		
 		return getBusinessPartner(account.getCodeBusinessPartner()).then(
 				repository.countByAccountTypeAndCodeBusinessPartner("AH", account.getCodeBusinessPartner())
-				.filter(LongZero::test)
+				.filter(LongThanZero::test)
 				.then(Mono.just(account)
 						  .flatMap(FuctionalSaveAccount::apply)
 						  .switchIfEmpty(Mono.error(new AccountNotCreatedException())))
@@ -108,7 +105,7 @@ public class AccountService implements IAccountService {
 					
 		return getBusinessPartner(account.getCodeBusinessPartner()).then(
 				repository.countByAccountTypeAndCodeBusinessPartner("CO", account.getCodeBusinessPartner())
-				.filter(LongZero::test)
+				.filter(LongThanZero::test)
 				.then(Mono.defer(()->{
 					Account a = Account.builder()
 							.accountId(AccountGeneratorValues.IdentityGenerate("CO",account.getCodeBusinessPartner()))
@@ -173,10 +170,10 @@ public class AccountService implements IAccountService {
 		
 	}
 	
+	private Predicate<Long> LongThanZero = a -> (a == 0);
 	
-	private  Function<SavingAccountDTO, Mono<Account>> FuctionalSaveAccount=
-
-account -> {	
+	private Function<SavingAccountDTO, Mono<Account>> FuctionalSaveAccount = account -> {	
+		
 		if(account.getSubType().equals("VI")) {
 			 
 			 //validacion tarjeta credito
