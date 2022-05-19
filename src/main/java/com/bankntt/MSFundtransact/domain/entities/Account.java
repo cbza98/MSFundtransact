@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.data.annotation.Id;
 
-import com.bankntt.MSFundtransact.domain.validation.Account.Istypeaccount;
+import com.bankntt.MSFundtransact.domain.validation.Account.IsTypeAccount;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,17 +29,20 @@ public class Account {
 	@NotNull
 	private String codeBusinessPartner;
 	private String accountNumber;
+	
 	@NotNull
 	@NotBlank
-	@Istypeaccount
+	@IsTypeAccount
 	private String accountType;
 	@NotNull
 	private Date date_Opened;
 	@NotNull	
 	private Boolean valid;
+	private String subType;
 	private Boolean minAmountIsRequired;
 	private Boolean maintenanceComision;
 	private List<Holder> holders;
 	private List<Signer> signers;
+
 
 }

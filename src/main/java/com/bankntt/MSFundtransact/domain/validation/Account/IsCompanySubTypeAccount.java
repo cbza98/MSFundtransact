@@ -12,12 +12,14 @@ import javax.validation.Payload;
 
 @Target({ FIELD })
 @Retention(RUNTIME)
-@Constraint(validatedBy = IstypeaccountValidator.class)
+@Constraint(validatedBy = IsCompanySubTypeAccountValidator.class)
 @Documented
-public @interface Istypeaccount {
-	String message() default "Type Account is no valid.";
+public @interface IsCompanySubTypeAccount {
+	
+	String message() default "Subtype Company Account is no valid. Valid values PY - Pyme, STD - Standart";
 
 	Class<?>[] groups() default {};
 
 	Class<? extends Payload>[] payload() default {};
+	
 }

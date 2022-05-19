@@ -6,12 +6,13 @@ import java.util.List;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-public class IstypeaccountValidator implements ConstraintValidator<Istypeaccount, String> {
+public class IsCompanySubTypeAccountValidator implements ConstraintValidator<IsCompanySubTypeAccount, String> {
 
-	List<String> type = Arrays.asList("AH", "CO", "PL", "VI", "PY");
-
+	List<String> subType = Arrays.asList("STD", "PY");
 	@Override
 	public boolean isValid(String value, ConstraintValidatorContext context) {
-		return type.contains(value);
+		
+		return subType.contains(value);
 	}
+
 }

@@ -1,14 +1,12 @@
 package com.bankntt.MSFundtransact.application.controller;
 
 import java.net.URI;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,8 +16,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.support.WebExchangeBindException;
 
+import com.bankntt.MSFundtransact.domain.beans.CompanyCheckingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.PeopleCheckingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.SavingAccountDTO;
+import com.bankntt.MSFundtransact.domain.beans.TimeDepositAccountDTO;
 import com.bankntt.MSFundtransact.domain.entities.Account;
 import com.bankntt.MSFundtransact.infraestructure.services.AccountService;
 
@@ -42,41 +43,66 @@ public class AccountController {
 		return service.findById(id);
 	}
 
-	@GetMapping("/Type/{type}/{code}")
-	public Mono<Long> CountType(@PathVariable String type, @PathVariable String code) {
-		// return service.CountType(type, code);
-		return null;
-	}
 
-	@PostMapping
-	public Mono<ResponseEntity<Map<String, Object>>> Create(@Valid @RequestBody Mono<Account> request) {
+	@PostMapping("/CreateSavingAccount")
+	public Mono<ResponseEntity<Map<String, Object>>> createSavingAccount(@Valid @RequestBody Mono<SavingAccountDTO> request) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		return request.flatMap(a -> {
-			return service.save(a).map(c -> {
+			return service.createSavingAccount(a).map(c -> {
 				response.put("Cuenta", c);
 				response.put("mensaje", "Cuenta creada con exito");
 				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
 						.contentType(MediaType.APPLICATION_JSON).body(response);
 			});
-		}).onErrorResume(t -> {
-			return Mono.just(t).cast(WebExchangeBindException.class).flatMap(e -> Mono.just(e.getFieldErrors()))
-					.flatMapMany(Flux::fromIterable).map(fieldError -> "Message Validation Entity: "
-							+ fieldError.getField() + " " + fieldError.getDefaultMessage())
-					.collectList().flatMap(list -> {
-
-						response.put("errors", list);
-						response.put("timestamp", new Date());
-						response.put("status", HttpStatus.BAD_REQUEST.value());
-
-						return Mono.just(ResponseEntity.badRequest().body(response));
-
-					});
-
 		});
 	}
+	
+	@PostMapping("/CreateTimeDepositAccount")
+	public Mono<ResponseEntity<Map<String, Object>>> createTimeDepositAccount(@Valid @RequestBody Mono<TimeDepositAccountDTO> request) {
 
+		Map<String, Object> response = new HashMap<>();
+
+		return request.flatMap(a -> {
+			return service.createTimeDepositAccount(a).map(c -> {
+				response.put("Cuenta", c);
+				response.put("mensaje", "Cuenta creada con exito");
+				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+						.contentType(MediaType.APPLICATION_JSON).body(response);
+			});
+		});
+	}
+	
+	@PostMapping("/CreatePeopleCheckingAccount")
+	public Mono<ResponseEntity<Map<String, Object>>> createPeopleCheckingAccount(@Valid @RequestBody Mono<PeopleCheckingAccountDTO> request) {
+
+		Map<String, Object> response = new HashMap<>();
+
+		return request.flatMap(a -> {
+			return service.createPeopleCheckingAccount(a).map(c -> {
+				response.put("Cuenta", c);
+				response.put("mensaje", "Cuenta creada con exito");
+				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+						.contentType(MediaType.APPLICATION_JSON).body(response);
+			});
+		});
+	}
+	
+	@PostMapping("/CreateCompanyCheckingAccount")
+	public Mono<ResponseEntity<Map<String, Object>>> createCompanyCheckingAccount(@Valid @RequestBody Mono<CompanyCheckingAccountDTO> request) {
+
+		Map<String, Object> response = new HashMap<>();
+
+		return request.flatMap(a -> {
+			return service.createCompanyCheckingAccount(a).map(c -> {
+				response.put("Cuenta", c);
+				response.put("mensaje", "Cuenta creada con exito");
+				return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+						.contentType(MediaType.APPLICATION_JSON).body(response);
+			});
+		});
+	}
 	@PostMapping("/saveBulk")
 	public Mono<ResponseEntity<Map<String, Object>>> saveBulk(@RequestBody Flux<Account> businessPartnerList) {
 
@@ -96,4 +122,5 @@ public class AccountController {
 				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 
+	
 }
