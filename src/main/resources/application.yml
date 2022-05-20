@@ -5,7 +5,7 @@ spring:
   application:
     name: ms-fund-transact
 server:
-  port: 9090
+  port: 9091
 
 
 eureka:
@@ -13,7 +13,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:8082/eureka/
     enabled: false
   instance:
     hostname: localhost
