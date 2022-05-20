@@ -1,11 +1,10 @@
 package com.bankntt.MSFundtransact.infraestructure.services;
 
+import com.bankntt.MSFundtransact.application.exception.AccountNotCreatedException;
 import com.bankntt.MSFundtransact.application.exception.EntityNotExistsException;
-import com.bankntt.MSFundtransact.application.helpers.AccountGeneratorValues;
+import com.bankntt.MSFundtransact.application.helpers.CardGeneratorValues;
 import com.bankntt.MSFundtransact.domain.beans.BusinessPartnerBean;
 import com.bankntt.MSFundtransact.domain.beans.CreateCreditCardDTO;
-import com.bankntt.MSFundtransact.domain.beans.SavingAccountDTO;
-import com.bankntt.MSFundtransact.domain.entities.Account;
 import com.bankntt.MSFundtransact.domain.entities.CreditCard;
 import com.bankntt.MSFundtransact.domain.repository.CreditCardRepository;
 import com.bankntt.MSFundtransact.infraestructure.interfaces.ICreditCardService;
@@ -23,7 +22,6 @@ import java.util.function.Function;
 
 public class CreditCardService implements ICreditCardService {
 
-
     CreditCardRepository repository;
 
     @Override
@@ -33,8 +31,15 @@ public class CreditCardService implements ICreditCardService {
 
     @Override
     public Mono<CreditCard> save(CreditCard _entity) {
-        // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public Mono<CreditCard> createCreditCard(CreateCreditCardDTO _entity) {
+       return Mono.just(_entity)
+                .doOnNext(r -> getBusinessPartner.accept(r.getCodeBusinessPartner()))
+                .flatMap(saveCreditCard ).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
+
     }
 
     @Override
@@ -59,15 +64,17 @@ public class CreditCardService implements ICreditCardService {
 
     };
 
-    private final Function<CreateCreditCardDTO, Mono<CreditCard>> CreateSavingAccount = creditCardDto -> {
+    private final Function<CreateCreditCardDTO, Mono<CreditCard>> saveCreditCard = creditCardDto -> {
 
         CreditCard a;
 
             a = CreditCard.builder()
-
-
+                    .cardNumber(CardGeneratorValues.CardNumberGenerate())
+                    .approvedline(creditCardDto.getLimit())
                     .valid(true)
+                    .expiringDate(CardGeneratorValues.CardExpiringDateGenerate())
                     .codeBusinessPartner(creditCardDto.getCodeBusinessPartner())
+                    .cvv(CardGeneratorValues.CardCVVGenerate())
                     .openDate(new Date()).build();
 
         return repository.save(a);
