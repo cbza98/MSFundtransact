@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import com.bankntt.msfundtransact.domain.validation.account.IsTypeAccount;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Document
 public class Account {
 
 	@Id

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.bankntt.msfundtransact.domain.beans.CreateCreditCardDTO;
 import com.bankntt.msfundtransact.domain.entities.CreditCard;
-import com.bankntt.msfundtransact.infraestructure.services.CreditCardService;
+import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditCardService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,10 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/MsFundTransact/Entities/CrediCard")
+@RequestMapping("/MsFundTransact/Entities/CreditCard")
 public class CreditCardController {
     @Autowired
-    private CreditCardService service;
+    private ICreditCardService service;
 
     @GetMapping
     public Mono<ResponseEntity<Flux<CreditCard>>> FindAll() {

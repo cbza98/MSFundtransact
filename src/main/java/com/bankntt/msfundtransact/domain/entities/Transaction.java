@@ -19,7 +19,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collection = "transactions")
+@Document
 public class Transaction {
 	
 	@Id

@@ -3,6 +3,7 @@ package com.bankntt.msfundtransact.domain.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Document
 public class Credit {
     @Id
     @JsonIgnore

@@ -1,8 +1,10 @@
 package com.bankntt.msfundtransact.infraestructure.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.bankntt.msfundtransact.application.exception.AccountNotCreatedException;
@@ -21,8 +23,10 @@ import java.util.Date;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@Service
 public class CreditCardService implements ICreditCardService {
 
+	@Autowired
     CreditCardRepository repository;
 
     @Override
