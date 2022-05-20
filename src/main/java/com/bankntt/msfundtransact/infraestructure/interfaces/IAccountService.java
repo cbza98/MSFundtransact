@@ -3,7 +3,6 @@ package com.bankntt.msfundtransact.infraestructure.interfaces;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 
 import com.bankntt.msfundtransact.domain.beans.CompanyCheckingAccountDTO;
 import com.bankntt.msfundtransact.domain.beans.PeopleCheckingAccountDTO;
