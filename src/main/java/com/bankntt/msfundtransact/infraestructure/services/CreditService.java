@@ -1,5 +1,7 @@
 package com.bankntt.msfundtransact.infraestructure.services;
 
+import com.bankntt.msfundtransact.domain.beans.*;
+import com.bankntt.msfundtransact.domain.entities.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -8,10 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.bankntt.msfundtransact.application.exception.EntityNotExistsException;
-import com.bankntt.msfundtransact.domain.beans.BusinessPartnerBean;
-import com.bankntt.msfundtransact.domain.beans.CreditCardPaymentDTO;
-import com.bankntt.msfundtransact.domain.beans.CreditPaymentDTO;
-import com.bankntt.msfundtransact.domain.beans.NewCreditDTO;
 import com.bankntt.msfundtransact.domain.entities.Credit;
 import com.bankntt.msfundtransact.domain.repository.CreditRepository;
 import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditService;
@@ -20,8 +18,8 @@ import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditTransactionS
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 @Service
-public class CreditService implements ICreditService, ICreditTransactionService {
-
+public class CreditService implements ICreditService {
+    //Servicios Crud de Credito
     @Autowired
     CreditRepository repository;
 
@@ -59,20 +57,5 @@ public class CreditService implements ICreditService, ICreditTransactionService 
     public Mono<Credit> findById(String Id) {
         // TODO Auto-generated method stub
         return repository.findById(Id);
-    }
-
-    @Override
-    public Mono<Credit> doCreditPayment(CreditPaymentDTO dto) {
-        return null;
-    }
-
-    @Override
-    public Mono<Credit> doCreditCardPayment(CreditCardPaymentDTO dto) {
-        return null;
-    }
-
-    @Override
-    public Mono<Credit> getNewCredit(NewCreditDTO dto) {
-        return null;
     }
 }

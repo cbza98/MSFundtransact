@@ -32,6 +32,10 @@ public class Transaction {
     @NotNull
     @Digits(integer =20, fraction=6)
     private BigDecimal amount;
+    @Digits(integer =20, fraction=6)
+    private BigDecimal debit;
+    @Digits(integer =20, fraction=6)
+    private BigDecimal credit;
     private String creditcard;
     private String creditid;
 
