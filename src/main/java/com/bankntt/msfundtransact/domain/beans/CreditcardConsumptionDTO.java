@@ -11,10 +11,11 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreditCardPaymentDTO {
+public class CreditcardConsumptionDTO {
     @NotBlank
     private String creditcard;
     @NotNull
     @Digits(integer =20, fraction=6)
-    private BigDecimal payment;
+    private BigDecimal consumption;
+
 }

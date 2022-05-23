@@ -63,6 +63,10 @@ public class AccountService implements IAccountService {
         return repository.saveAll(a);
     }
 
+    public Mono<Boolean> exist(String Id)
+    {
+        return repository.existsById(Id);
+    }
     @Override
     public Mono<Account> update(String id, Account _request) {
 
