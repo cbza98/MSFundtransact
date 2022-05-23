@@ -1,5 +1,6 @@
 package com.bankntt.msfundtransact.application.controller;
 
+import com.bankntt.msfundtransact.domain.beans.AccountTransferDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,4 +45,32 @@ public class AccountTransactionController {
                     .contentType(MediaType.APPLICATION_JSON).body(response);
         }));
     }
+
+    @PostMapping("/TransferSameHolder")
+    public Mono<ResponseEntity<Map<String, Object>>> TransferSameHolder(@Valid @RequestBody Mono<AccountTransferDTO> request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        return request.flatMap(a -> service.TransferBetweenAccounts(a).map(c -> {
+            response.put("Transfer Same Holder", c);
+            response.put("message", "Successful Transfer Same Holder");
+            return ResponseEntity.created(URI.create("/MsFundTransact/Entities/Transaction/".concat(c.getTransactionId())))
+                    .contentType(MediaType.APPLICATION_JSON).body(response);
+        }));
+    }
+
+    @PostMapping("/TransferToThirdParty")
+    public Mono<ResponseEntity<Map<String, Object>>> TransferToThirdParty(@Valid @RequestBody Mono<AccountTransferDTO> request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        return request.flatMap(a -> service.doTransferToThirdParty(a).map(c -> {
+            response.put("Transfer Same Holder", c);
+            response.put("message", "Successful Transfer Same Holder");
+            return ResponseEntity.created(URI.create("/MsFundTransact/Entities/Transaction/".concat(c.getTransactionId())))
+                    .contentType(MediaType.APPLICATION_JSON).body(response);
+        }));
+    }
+
+
 }
