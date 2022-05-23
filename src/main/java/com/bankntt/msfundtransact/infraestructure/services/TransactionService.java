@@ -2,6 +2,7 @@ package com.bankntt.msfundtransact.infraestructure.services;
 
 import com.bankntt.msfundtransact.domain.entities.Credit;
 import com.bankntt.msfundtransact.domain.entities.CreditCard;
+import com.bankntt.msfundtransact.domain.repository.AccountRepository;
 import com.bankntt.msfundtransact.domain.repository.CreditCardRepository;
 import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class TransactionService implements ITransactionService, ICreditTransacti
     //Attribute
     @Autowired
     TransactionRepository trepository;
+    @Autowired
+    AccountRepository arepository;
     @Autowired
     CreditCardRepository crepository;
     @Autowired
@@ -73,7 +76,13 @@ public class TransactionService implements ITransactionService, ICreditTransacti
     @Override
     public Mono<Transaction> doAccountDeposit(AccountOperationDTO dto) {
 
-        return accountService.findByAccountNumber(dto.getAccount()).then(Mono.just(dto)
+        return accountService.findByAccountNumber(dto.getAccount()).flatMap (a -> {
+            a.setBalance(a.getBalance().add(dto.getAmount()));
+            return arepository.save(a);
+        })
+
+
+                .then(Mono.just(dto)
                         .flatMap(savedeposit))
                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
 
@@ -81,7 +90,19 @@ public class TransactionService implements ITransactionService, ICreditTransacti
 
     @Override
     public Mono<Transaction> TransferBetweenAccounts(AccountTransferDTO dto) {
-        return null;
+        return accountService.findByAccountNumber(dto.getFaccount())
+                .filter(r -> r.getCodeBusinessPartner().equals(dto.getFbp()))
+                .flatMap (a -> {
+                    a.setBalance(a.getBalance().subtract(dto.getAmount()));
+                    return arepository.save(a);})
+                .then(accountService.findByAccountNumber(dto.getTaccount())
+                        .flatMap( a -> {
+                                    a.setBalance(a.getBalance().add(dto.getAmount()));
+                                    return arepository.save(a);})
+
+                .then(Mono.just(dto).flatMap(savetransfertbtweenaccount)
+                        .switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
+
     }
 
     @Override
@@ -93,11 +114,21 @@ public class TransactionService implements ITransactionService, ICreditTransacti
 
     }
 
-
-
     @Override
     public Mono<Transaction> doTransferToThirdParty(AccountTransferDTO dto) {
-        return null;
+        return accountService.findByAccountNumber(dto.getFaccount())
+                .filter(r -> r.getCodeBusinessPartner().equals(dto.getFbp()))
+                .flatMap (a -> {
+                    a.setBalance(a.getBalance().subtract(dto.getAmount()));
+                    return arepository.save(a);})
+                .then(accountService.findByAccountNumber(dto.getTaccount())
+                        .flatMap( a -> {
+                            a.setBalance(a.getBalance().add(dto.getAmount()));
+                            return arepository.save(a);})
+
+                        .then(Mono.just(dto).flatMap(savetransfertbtweenaccount)
+                                .switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
+
     }
 
     // Credits Transactions
@@ -157,7 +188,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .createDate(new Date()).build();
 
         _t = trepository.save(t);
-        accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
+      accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
         return _t;
     };
     private final Function<AccountOperationDTO, Mono<Transaction>> savewithdrawal = withdrawal -> {
@@ -232,4 +263,58 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         //   creditcardService.updatepayments(payment.getCreditcard(), payment.getPayment());
         return _t;
     };
+    private final Function<AccountTransferDTO, Mono<Transaction>> savetransfertbtweenaccount = transfer -> {
+
+        Transaction t;
+        String a = transfer.getFaccount();
+        String b = transfer.getTaccount();
+        if (a.equals(b))
+        {
+            Mono.error(new AccountNotCreatedException());
+        }
+
+        Mono<Transaction> _t;
+        t = Transaction.builder()
+                .amount(transfer.getAmount())
+                .debit(transfer.getAmount())
+                .credit(transfer.getAmount())
+                .toaccount(b)
+                .fromaccount(a)
+                .transactiontype(TransactionType.SAME_HOLDER_TRANSFER)
+                .createDate(new Date()).build();
+        _t = trepository.save(t);
+       // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
+       // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
+        return _t;
+    };
+    private final Function<AccountTransferDTO, Mono<Transaction>> saveTransferToThirdParty = transfer -> {
+
+        Transaction t;
+        String a = transfer.getFaccount();
+        String b = transfer.getTaccount();
+        if (a.equals(b))
+        {
+            Mono.error(new AccountNotCreatedException());
+        }
+
+        Mono<Transaction> _t;
+        t = Transaction.builder()
+                .amount(transfer.getAmount())
+                .debit(transfer.getAmount())
+                .credit(transfer.getAmount())
+                .toaccount(b)
+                .fromaccount(a)
+                .transactiontype(TransactionType.THIRD_PARTY_TRANSFER)
+                .createDate(new Date()).build();
+        _t = trepository.save(t);
+        // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
+        // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
+        return _t;
+    };
 }
+
+
+
+
+
+

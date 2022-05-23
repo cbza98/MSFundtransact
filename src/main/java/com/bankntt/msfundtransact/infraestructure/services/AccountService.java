@@ -83,13 +83,13 @@ public class AccountService implements IAccountService {
     // Balance
     @Override
     public Mono<Account> updateBalanceDp(String id, BigDecimal balance) {
-        return repository.findById(id).flatMap(a ->
+        return repository.findByAccountNumber(id).flatMap(a ->
                 {
                     a.setBalance(a.getBalance().add(balance));
                     return repository.save(a);
                 });
     }
-    
+
     @Override
     public Mono<Account> updateBalanceWt(String id, BigDecimal balance) {
         return repository.findById(id).flatMap(a ->
@@ -158,9 +158,10 @@ public class AccountService implements IAccountService {
             //validacion tarjeta credito
             a = Account.builder()
                     .accountId(AccountGeneratorValues.IdentityGenerate("AH", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
+                    .accountNumber(AccountGeneratorValues.NumberGenerate())
                     .accountName("VIP Saving Account")
                     .accountType("AH")
+                    .balance(BigDecimal.valueOf(0.00))
                     .subType(account.getSubType())
                     .valid(true)
                     .codeBusinessPartner(account.getCodeBusinessPartner())
@@ -170,7 +171,7 @@ public class AccountService implements IAccountService {
 
             a = Account.builder()
                     .accountId(AccountGeneratorValues.IdentityGenerate("AH", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
+                    .accountNumber(AccountGeneratorValues.NumberGenerate())
                     .accountName("Standart Saving Account")
                     .accountType("AH")
                     .subType(account.getSubType())
@@ -186,9 +187,10 @@ public class AccountService implements IAccountService {
 
     	  Account a = Account.builder()
                   .accountId(AccountGeneratorValues.IdentityGenerate("PL", account.getCodeBusinessPartner()))
-                  .accountNumber(AccountGeneratorValues.NumberGenerate("PL"))
+                  .accountNumber(AccountGeneratorValues.NumberGenerate())
                   .accountName("Time Deposit Account")
                   .accountType("PL")
+                  .balance(BigDecimal.valueOf(0.00))
                   .valid(true)
                   .codeBusinessPartner(account.getCodeBusinessPartner())
                   .date_Opened(new Date()).build();
@@ -200,8 +202,9 @@ public class AccountService implements IAccountService {
     	
             Account a = Account.builder()
                     .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+                    .accountNumber(AccountGeneratorValues.NumberGenerate())
                     .accountName("People Checking Account")
+                    .balance(BigDecimal.valueOf(0.00))
                     .accountType("CO")
                     .valid(true)
                     .codeBusinessPartner(account.getCodeBusinessPartner())
@@ -216,21 +219,24 @@ public class AccountService implements IAccountService {
 
             //validacion tarjeta
             a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+
+                    .accountNumber(AccountGeneratorValues.NumberGenerate())
+
                     .accountName("Pyme Company Checking Account")
                     .accountType("CO")
+                    .balance(BigDecimal.valueOf(0.00))
                     .valid(true)
                     .codeBusinessPartner(account.getCodeBusinessPartner())
                     .date_Opened(new Date()).build();
 
         } else {
             a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
+                    //.accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
+                    .accountNumber(AccountGeneratorValues.NumberGenerate())
                     .accountName("Standart Company Checking Account")
                     .accountType("CO")
                     .subType(account.getSubType())
+                    .balance(BigDecimal.valueOf(0.00))
                     .valid(true)
                     .codeBusinessPartner(account.getCodeBusinessPartner())
                     .date_Opened(new Date()).build();

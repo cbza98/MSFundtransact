@@ -5,8 +5,8 @@ import java.security.SecureRandom;
 public class AccountGeneratorValues {
 
 
-    public static String NumberGenerate(String _accountType) {
-        String start = _accountType;
+    public static String NumberGenerate() {
+        String start = new String();
         SecureRandom value = new SecureRandom(); // Compliant for security-sensitive use cases
         byte[] bytes = new byte[20];
         value.nextBytes(bytes);

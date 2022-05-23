@@ -33,7 +33,6 @@ public class Account {
 	@NotNull
 	private String codeBusinessPartner;
 	private String accountNumber;
-	@JsonIgnore
 	@Digits(integer =20, fraction=6)
 	private BigDecimal balance;
 	@NotNull
