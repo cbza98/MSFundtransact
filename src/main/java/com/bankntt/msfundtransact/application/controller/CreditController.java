@@ -1,5 +1,6 @@
 package com.bankntt.msfundtransact.application.controller;
 
+import com.bankntt.msfundtransact.domain.beans.NewCreditDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/Credit")
+@RequestMapping("/MsFundTransact/Entities/Credit")
 public class CreditController {
     @Autowired
     private CreditService service;
@@ -34,13 +35,13 @@ public class CreditController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Map<String, Object>>> Create(@Valid @RequestBody Mono<Credit> request) {
+    public Mono<ResponseEntity<Map<String, Object>>> Create(@Valid @RequestBody Mono<NewCreditDTO> request) {
 
         Map<String, Object> response = new HashMap<>();
 
         return request.flatMap(a -> service.save(a).map(c -> {
             response.put("Credit", c);
-            response.put("mensaje", "Cuenta creada con exito");
+            response.put("mensaje", "Credit Successfully created");
             return ResponseEntity.created(URI.create("/api/Credit/".concat(c.getCreditid())))
                     .contentType(MediaType.APPLICATION_JSON).body(response);
         }));

@@ -4,6 +4,7 @@ import com.bankntt.msfundtransact.domain.entities.Credit;
 import com.bankntt.msfundtransact.domain.entities.CreditCard;
 import com.bankntt.msfundtransact.domain.repository.AccountRepository;
 import com.bankntt.msfundtransact.domain.repository.CreditCardRepository;
+import com.bankntt.msfundtransact.domain.repository.CreditRepository;
 import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 @Service
 public class TransactionService implements ITransactionService, ICreditTransactionService {
@@ -37,10 +37,13 @@ public class TransactionService implements ITransactionService, ICreditTransacti
     @Autowired
     CreditCardRepository crepository;
     @Autowired
+    CreditRepository crrepository;
+    @Autowired
     AccountService accountService;
     @Autowired
     CreditCardService creditcardService;
-
+    @Autowired
+    CreditService creditService;
     //Crud
     @Override
     public Flux<Transaction> findAll() {
@@ -100,7 +103,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                                     a.setBalance(a.getBalance().add(dto.getAmount()));
                                     return arepository.save(a);})
 
-                .then(Mono.just(dto).flatMap(savetransfertbtweenaccount)
+                .then(Mono.just(dto).flatMap(Savetransfertbtweenaccount)
                         .switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
 
     }
@@ -126,16 +129,41 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                             a.setBalance(a.getBalance().add(dto.getAmount()));
                             return arepository.save(a);})
 
-                        .then(Mono.just(dto).flatMap(savetransfertbtweenaccount)
+                        .then(Mono.just(dto).flatMap(saveTransferToThirdParty)
                                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
 
     }
-
     // Credits Transactions
     @Override
-    public Mono<Credit> doCreditPayment(CreditPaymentDTO dto) {
-        return null;
+    public Mono<Transaction> doCreditPayment(CreditPaymentDTO dto) {
+        return creditService.findById(dto.getCreditid())
+                .filter(r -> isValidPaymentCredit.test(r, dto))
+                .flatMap(r ->
+                {
+                    r.setPaymentcredit(r.getPaymentcredit().add(dto.getPayment()));
+                    return crrepository.save(r);
+                })
+                .then(
+                        Mono.just(dto)
+                                .flatMap(savepaymentcredit))
+                .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
     }
+
+    @Override
+    public Mono<Transaction> doCreditConsumption(CreditConsumptionDTO dto) {
+        return creditService.findById(dto.getCreditid())
+                .filter(r -> isValidConsumptionCredit.test(r, dto))
+                .flatMap(r ->
+                {
+                    r.setUsedcredit(r.getUsedcredit().add(dto.getConsumption()));
+                    return crrepository.save(r);
+                })
+                .then(
+                        Mono.just(dto)
+                                .flatMap(saveconsumptioncredit))
+                .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
+    }
+
 
     @Override
     public Mono<Transaction> doCreditCardPayment(CreditCardPaymentDTO dto) {
@@ -150,10 +178,9 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 })
                 .then(
                         Mono.just(dto)
-                                .flatMap(savepaymentcreditcard))
+                                .flatMap(Savepaymentcreditcard))
                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
     }
-
     @Override
     public Mono<Transaction> doCreditcardConsumption(CreditcardConsumptionDTO dto) {
         return creditcardService.findById(dto.getCreditcard())
@@ -170,13 +197,11 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                                 .flatMap(saveconsumptioncreditcard))
                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
     }
-
     @Override
-    public Mono<Credit> getNewCredit(NewCreditDTO dto) {
+    public Mono<Transaction> getNewCredit(NewCreditDTO dto) {
         return null;
     }
-
-    //Metodos Funcionales
+    //Methods
     private final Function<AccountOperationDTO, Mono<Transaction>> savedeposit = deposit -> {
 
         Transaction t;
@@ -209,16 +234,14 @@ public class TransactionService implements ITransactionService, ICreditTransacti
     {
         BigDecimal _a, _b;
         Integer responsen;
-        boolean b1;
         _a = a.getAvailableline();
         _b = a.getConsumedline().add(b.getConsumption());
         responsen = _a.compareTo(_b);
-        return b1 = responsen >= 0;
+        return responsen >= 0;
     };
     private final Function<CreditcardConsumptionDTO, Mono<Transaction>> saveconsumptioncreditcard = consumption -> {
 
         Transaction t;
-        CreditCard c = new CreditCard();
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .debit(consumption.getConsumption())
@@ -226,31 +249,37 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .transactiontype(TransactionType.CREDIT_CARD_CONSUMPTION)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
-        //  creditcardService.updateconsumption(t.getCreditcard(),t.getDebit());
         return _t;
     };
     private final BiPredicate<CreditCard, CreditCardPaymentDTO> isValidPaymentCreditCard = (a, b) ->
     {
         BigDecimal _a, _b;
         Integer responsen;
-        boolean b1;
         _a = a.getAvailableline();
         _b = a.getConsumedline().add(b.getPayment());
         responsen = _a.compareTo(_b);
-        return b1 = responsen >= 0;
+        return responsen >= 0;
     };
-    private final Predicate<AccountTransferDTO> isDistinctAccount = (dto) ->
+    private final BiPredicate<Credit, CreditPaymentDTO> isValidPaymentCredit = (a, b) ->
     {
-        Boolean r1 = true;
-        String a = dto.getFaccount();
-        String b = dto.getTaccount();
-        if (a.equals(b)) {
-            r1= false;
-        }
-        return r1;
-    };
+        BigDecimal _a, _b;
+        Integer responsen;
 
-    private final Function<CreditCardPaymentDTO, Mono<Transaction>> savepaymentcreditcard = payment -> {
+        _a = a.getAvailablecredit();
+        _b = a.getUsedcredit().add(b.getPayment());
+        responsen = _a.compareTo(_b);
+        return responsen >= 0;
+    };
+    private final BiPredicate<Credit, CreditConsumptionDTO> isValidConsumptionCredit= (a, b) ->
+    {
+        BigDecimal _a, _b;
+        Integer responsen;
+        _a = a.getAvailablecredit();
+        _b = a.getUsedcredit().add(b.getConsumption());
+        responsen = _a.compareTo(_b);
+        return responsen >= 0;
+    };
+    private final Function<CreditCardPaymentDTO, Mono<Transaction>> Savepaymentcreditcard = payment -> {
 
         Transaction t;
         Mono<Transaction> _t;
@@ -260,10 +289,33 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .transactiontype(TransactionType.CREDIT_CARD_PAYMENT)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
-        //   creditcardService.updatepayments(payment.getCreditcard(), payment.getPayment());
         return _t;
     };
-    private final Function<AccountTransferDTO, Mono<Transaction>> savetransfertbtweenaccount = transfer -> {
+    private final Function<CreditPaymentDTO, Mono<Transaction>> savepaymentcredit = payment -> {
+
+        Transaction t;
+        Mono<Transaction> _t;
+        t = Transaction.builder()
+                .credit(payment.getPayment())
+                .creditid(payment.getCreditid())
+                .transactiontype(TransactionType.CREDIT_PAYMENT)
+                .createDate(new Date()).build();
+        _t = trepository.save(t);
+        return _t;
+    };
+    private final Function<CreditConsumptionDTO, Mono<Transaction>> saveconsumptioncredit = consumption -> {
+
+        Transaction t;
+        Mono<Transaction> _t;
+        t = Transaction.builder()
+                .debit(consumption.getConsumption())
+                .creditid(consumption.getCreditid())
+                .transactiontype(TransactionType.CREDIT_CONSUMPTION)
+                .createDate(new Date()).build();
+        _t = trepository.save(t);
+        return _t;
+    };
+    private final Function<AccountTransferDTO, Mono<Transaction>> Savetransfertbtweenaccount = transfer -> {
 
         Transaction t;
         String a = transfer.getFaccount();
@@ -283,8 +335,6 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .transactiontype(TransactionType.SAME_HOLDER_TRANSFER)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
-       // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
-       // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
         return _t;
     };
     private final Function<AccountTransferDTO, Mono<Transaction>> saveTransferToThirdParty = transfer -> {
@@ -307,8 +357,6 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .transactiontype(TransactionType.THIRD_PARTY_TRANSFER)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
-        // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
-        // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
         return _t;
     };
 }

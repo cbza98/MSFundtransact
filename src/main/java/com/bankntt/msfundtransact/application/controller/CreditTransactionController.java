@@ -1,8 +1,6 @@
 package com.bankntt.msfundtransact.application.controller;
 
-import com.bankntt.msfundtransact.domain.beans.AccountOperationDTO;
-import com.bankntt.msfundtransact.domain.beans.CreditCardPaymentDTO;
-import com.bankntt.msfundtransact.domain.beans.CreditcardConsumptionDTO;
+import com.bankntt.msfundtransact.domain.beans.*;
 import com.bankntt.msfundtransact.infraestructure.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -49,4 +47,36 @@ public class CreditTransactionController {
                     .contentType(MediaType.APPLICATION_JSON).body(response);
         }));
     }
+
+    @PostMapping("/Creditpayment")
+    //Pagos de Credito
+    public Mono<ResponseEntity<Map<String, Object>>> Creditpayment(@Valid @RequestBody Mono<CreditPaymentDTO> request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        return request.flatMap(a -> service.doCreditPayment(a).map(c -> {
+            response.put("Credit Payment", c);
+            response.put("message", "Successful Credit Payment ");
+            return ResponseEntity.created(URI.create("/MsFundTransact/Entities/Transaction/".concat(c.getTransactionId())))
+                    .contentType(MediaType.APPLICATION_JSON).body(response);
+        }));
+    }
+    //Consumos de Credito
+    @PostMapping("/Creditconsumption")
+    public Mono<ResponseEntity<Map<String, Object>>> Creditconsumption(@Valid @RequestBody Mono<CreditConsumptionDTO> request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        return request.flatMap(a -> service.doCreditConsumption(a).map(c -> {
+            response.put("Credit Consumption", c);
+            response.put("message", "Successful Credit Consumption");
+            return ResponseEntity.created(URI.create("/MsFundTransact/Entities/Transaction/".concat(c.getTransactionId())))
+                    .contentType(MediaType.APPLICATION_JSON).body(response);
+        }));
+    }
+
+
+
+
+
 }

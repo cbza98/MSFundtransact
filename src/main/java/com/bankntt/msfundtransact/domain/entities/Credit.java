@@ -31,5 +31,7 @@ public class Credit {
     @JsonIgnore
     @Digits(integer = 19,fraction = 6)
     private BigDecimal availablecredit;
+    @Digits(integer = 19,fraction = 6)
+    private BigDecimal paymentcredit;
 
 }
