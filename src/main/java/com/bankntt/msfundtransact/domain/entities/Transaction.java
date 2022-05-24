@@ -38,6 +38,12 @@ public class Transaction {
     private BigDecimal credit;
     private String creditcard;
     private String creditid;
+    @Digits(integer =20, fraction=6)
+    private BigDecimal balance;
+    private Date transactionDate;
+    private String creditcardId;
+    private String creditNumber;
+    private String accountNumber;
 
 	
 }
