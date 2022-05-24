@@ -7,7 +7,8 @@ public enum TransactionType {
     SAME_HOLDER_TRANSFER("04"),
     CREDIT_PAYMENT("05"),
     CREDIT_CARD_PAYMENT("06"),
-    CREDIT_CARD_CONSUMPTION("07");
+    CREDIT_CARD_CONSUMPTION("07"),
+    CREDIT_CONSUMPTION("05");
     public final String type;
 
     private TransactionType(String type) {
