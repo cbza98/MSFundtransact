@@ -90,7 +90,6 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
 
     }
-
     @Override
     public Mono<Transaction> TransferBetweenAccounts(AccountTransferDTO dto) {
         return accountService.findByAccountNumber(dto.getFaccount())
@@ -133,8 +132,6 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                         .then(Mono.just(dto).flatMap(saveTransferToThirdParty)
                                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()))));
 
-
-    }
 
     }
     // Credits Transactions
@@ -249,7 +246,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .debit(consumption.getConsumption())
-                .creditcard(consumption.getCreditcard())
+                .creditCardId(consumption.getCreditcard())
                 .transactiontype(TransactionType.CREDIT_CARD_CONSUMPTION)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -289,7 +286,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .credit(payment.getPayment())
-                .creditcard(payment.getCreditcard())
+                .creditCardId(payment.getCreditcard())
                 .transactiontype(TransactionType.CREDIT_CARD_PAYMENT)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -301,7 +298,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .credit(payment.getPayment())
-                .creditid(payment.getCreditid())
+                .creditId(payment.getCreditid())
                 .transactiontype(TransactionType.CREDIT_PAYMENT)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -313,7 +310,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .debit(consumption.getConsumption())
-                .creditid(consumption.getCreditid())
+                .creditId(consumption.getCreditid())
                 .transactiontype(TransactionType.CREDIT_CONSUMPTION)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -363,7 +360,8 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         _t = trepository.save(t);
         return _t;
     };
-    private final Function<AccountTransferDTO, Mono<Transaction>> savetransfertbtweenaccount = transfer -> {
+
+    private final Function<AccountTransferDTO, Mono<Transaction>> savetransfertbetweenaccount = transfer -> {
 
         Transaction t;
         String a = transfer.getFaccount();
@@ -387,30 +385,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
        // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
         return _t;
     };
-    private final Function<AccountTransferDTO, Mono<Transaction>> saveTransferToThirdParty = transfer -> {
 
-        Transaction t;
-        String a = transfer.getFaccount();
-        String b = transfer.getTaccount();
-        if (a.equals(b))
-        {
-            Mono.error(new AccountNotCreatedException());
-        }
-
-        Mono<Transaction> _t;
-        t = Transaction.builder()
-                .amount(transfer.getAmount())
-                .debit(transfer.getAmount())
-                .credit(transfer.getAmount())
-                .toaccount(b)
-                .fromaccount(a)
-                .transactiontype(TransactionType.THIRD_PARTY_TRANSFER)
-                .createDate(new Date()).build();
-        _t = trepository.save(t);
-        // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
-        // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
-        return _t;
-    };
 }
 
 
