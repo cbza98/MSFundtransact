@@ -1,9 +1,7 @@
 package com.bankntt.msfundtransact.infraestructure.services;
 
-import com.bankntt.msfundtransact.application.helpers.CardGeneratorValues;
 import com.bankntt.msfundtransact.domain.beans.*;
-import com.bankntt.msfundtransact.domain.entities.CreditCard;
-import com.bankntt.msfundtransact.domain.entities.Transaction;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

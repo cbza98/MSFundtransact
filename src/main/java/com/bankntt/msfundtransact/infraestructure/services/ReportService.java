@@ -14,7 +14,9 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class ReportService implements IReportService {
+    @Autowired
     private AccountRepository accRepository;
+    @Autowired
     private CreditCardRepository creditCardRepositoryRepository;
 
     @Override

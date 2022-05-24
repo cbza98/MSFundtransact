@@ -246,7 +246,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .debit(consumption.getConsumption())
-                .creditCardId(consumption.getCreditcard())
+                .creditcardId(consumption.getCreditcard())
                 .transactiontype(TransactionType.CREDIT_CARD_CONSUMPTION)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -286,7 +286,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .credit(payment.getPayment())
-                .creditCardId(payment.getCreditcard())
+                .creditcardId(payment.getCreditcard())
                 .transactiontype(TransactionType.CREDIT_CARD_PAYMENT)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -298,7 +298,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .credit(payment.getPayment())
-                .creditId(payment.getCreditid())
+                .creditid(payment.getCreditid())
                 .transactiontype(TransactionType.CREDIT_PAYMENT)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -310,7 +310,7 @@ public class TransactionService implements ITransactionService, ICreditTransacti
         Mono<Transaction> _t;
         t = Transaction.builder()
                 .debit(consumption.getConsumption())
-                .creditId(consumption.getCreditid())
+                .creditid(consumption.getCreditid())
                 .transactiontype(TransactionType.CREDIT_CONSUMPTION)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
@@ -358,31 +358,6 @@ public class TransactionService implements ITransactionService, ICreditTransacti
                 .transactiontype(TransactionType.THIRD_PARTY_TRANSFER)
                 .createDate(new Date()).build();
         _t = trepository.save(t);
-        return _t;
-    };
-
-    private final Function<AccountTransferDTO, Mono<Transaction>> savetransfertbetweenaccount = transfer -> {
-
-        Transaction t;
-        String a = transfer.getFaccount();
-        String b = transfer.getTaccount();
-        if (a.equals(b))
-        {
-            Mono.error(new AccountNotCreatedException());
-        }
-
-        Mono<Transaction> _t;
-        t = Transaction.builder()
-                .amount(transfer.getAmount())
-                .debit(transfer.getAmount())
-                .credit(transfer.getAmount())
-                .toaccount(b)
-                .fromaccount(a)
-                .transactiontype(TransactionType.SAME_HOLDER_TRANSFER)
-                .createDate(new Date()).build();
-        _t = trepository.save(t);
-       // accountService.updateBalanceDp(t.getToaccount(), t.getAmount());
-       // accountService.updateBalanceWt(t.getFromaccount(), t.getAmount());
         return _t;
     };
 

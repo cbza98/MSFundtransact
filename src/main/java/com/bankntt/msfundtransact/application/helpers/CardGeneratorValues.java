@@ -7,7 +7,6 @@ import java.util.Calendar;
 
 public class CardGeneratorValues {
 
-
     public static String CardNumberGenerate() {
         String start ="";
         SecureRandom value = new SecureRandom(); // Compliant for security-sensitive use cases
@@ -37,7 +36,7 @@ public class CardGeneratorValues {
 
     }
     public static String CardCVVGenerate() {
-        String start ="";
+        String start = "";
         SecureRandom value = new SecureRandom(); // Compliant for security-sensitive use cases
         byte bytes[] = new byte[20];
         value.nextBytes(bytes);
@@ -46,9 +45,10 @@ public class CardGeneratorValues {
         int v2 = value.nextInt(10);
         int v3 = value.nextInt(10);
         start += Integer.toString(v1) + Integer.toString(v2) + Integer.toString(v3);
-     //   start += Integer.toString(v1) + Integer.toString(v2);
+        //   start += Integer.toString(v1) + Integer.toString(v2);
 
         return start;
+    }
     public static String CardExpiringDateGenerate() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, 62);

@@ -1,4 +1,4 @@
-package com.bankntt.MSFundtransact;
+package com.bankntt.msfundtransact;
 
 import com.bankntt.msfundtransact.domain.repository.AccountRepository;
 

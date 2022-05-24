@@ -1,4 +1,4 @@
-package com.bankntt.MSFundtransact;
+package com.bankntt.msfundtransact;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

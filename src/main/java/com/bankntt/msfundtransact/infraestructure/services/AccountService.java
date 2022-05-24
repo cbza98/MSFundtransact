@@ -138,7 +138,7 @@ public class AccountService implements IAccountService {
     private final BiFunction<CreateAccountDTO,AccountItem, Mono<Account>> mapToAccountAndSave = (account,accountItem) -> {
 
     Account a = Account.builder()
-            .accountNumber(AccountGeneratorValues.NumberGenerate(accountItem.getAccountType()))
+            .accountNumber(AccountGeneratorValues.NumberGenerate())
             .valid(true)
             .balance(new BigDecimal("0.00"))
             .codeBusinessPartner(account.getCodeBusinessPartner())
