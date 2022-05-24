@@ -68,7 +68,6 @@ public class TransactionService implements ITransactionService{
                 .switchIfEmpty(Mono.error(new AccountNotCreatedException()));
 
     }
-
     @Override
     public Mono<Transaction> doAccountWithdrawal(AccountOperationDTO dto) {
 

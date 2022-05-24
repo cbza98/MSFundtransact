@@ -3,10 +3,13 @@ package com.bankntt.msfundtransact.infraestructure.services;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
+import com.bankntt.msfundtransact.domain.beans.*;
+import com.bankntt.msfundtransact.domain.entities.AccountItem;
+import com.bankntt.msfundtransact.infraestructure.interfaces.IAccountItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,11 +20,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.bankntt.msfundtransact.application.exception.AccountNotCreatedException;
 import com.bankntt.msfundtransact.application.exception.EntityNotExistsException;
 import com.bankntt.msfundtransact.application.helpers.AccountGeneratorValues;
-import com.bankntt.msfundtransact.domain.beans.BusinessPartnerBean;
-import com.bankntt.msfundtransact.domain.beans.CompanyCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.PeopleCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.SavingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.TimeDepositAccountDTO;
 import com.bankntt.msfundtransact.domain.entities.Account;
 import com.bankntt.msfundtransact.domain.repository.AccountRepository;
 import com.bankntt.msfundtransact.infraestructure.interfaces.IAccountService;
@@ -33,8 +31,10 @@ import reactor.core.publisher.Mono;
 public class AccountService implements IAccountService {
 
     @Autowired
-    AccountRepository repository;
+    private AccountRepository repository;
 
+    @Autowired
+    private IAccountItemService itemService;
     //methods
 
     // Cruds
@@ -95,142 +95,68 @@ public class AccountService implements IAccountService {
                 });
     }
     //Create
-    @Override
-    public Mono<Account> createSavingAccount(SavingAccountDTO account) {
-
-        return Mono.just(account).doOnNext(r -> getBusinessPartner.accept(r.getCodeBusinessPartner())).then(
-                repository.countByAccountTypeAndCodeBusinessPartner("AH", account.getCodeBusinessPartner())
-                        .filter(longThanZero)
-                        .then(Mono.just(account)
-                                  .flatMap(saveSavingAccount)
-                                  .switchIfEmpty(Mono.error(new AccountNotCreatedException())))
-        );
-    }
 
     @Override
-    public Mono<Account> createTimeDepositAccount(TimeDepositAccountDTO account) {
-
-        return Mono.just(account)
-        	   .doOnNext(r -> getBusinessPartner.accept(r.getCodeBusinessPartner()))
-        	   .flatMap(saveTimeDepositAccount).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
-        	  
+    public Mono<Account> createAccount(CreateAccountDTO account) {
+        return getAccountItem.apply(account)
+                .flatMap(ai->existsBusinessPartner.apply(account,ai))
+                .filter(ai->isBusinessPartnerAllowed.test(account,ai))
+                .flatMap(ai->validateLimitCreation.apply(account,ai))
+                .flatMap(ai->mapToAccountAndSave.apply(account,ai))
+                .switchIfEmpty(Mono.error(AccountNotCreatedException::new));
     }
 
-    @Override
-    public Mono<Account> createPeopleCheckingAccount(PeopleCheckingAccountDTO account) {
-
-        return Mono.just(account)
-         	   .doOnNext(r -> getBusinessPartner.accept(r.getCodeBusinessPartner()))
-         	   .flatMap(savePeopleCheckingAccount).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
-    }
-
-    @Override
-    public Mono<Account> createCompanyCheckingAccount(CompanyCheckingAccountDTO account) {
-
-        return Mono.just(account)
-                .doOnSuccess(r -> getBusinessPartner.accept(r.getCodeBusinessPartner()))
-          	   .flatMap(saveCompanyCheckingAccount).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
-    }
-    //Functionals
-    Predicate<Long> longThanZero = a -> (a == 0);
-
-    private final Consumer<String> getBusinessPartner = businessPartnerId-> {
+    //Functions
+    private final BiFunction<CreateAccountDTO,AccountItem, Mono<AccountItem>> existsBusinessPartner = (account,accountItem)-> {
 
         WebClient businessPartnerClient = WebClient.builder().baseUrl("http://localhost:9090/BusinessPartnerService")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
 
-        businessPartnerClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(businessPartnerId))
-                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExistsException()) )
-                .bodyToMono(BusinessPartnerBean.class);
-
+        return  businessPartnerClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}")
+                .build(account.getCodeBusinessPartner()))
+                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(EntityNotExistsException::new) )
+                .bodyToMono(BusinessPartnerBean.class).thenReturn(accountItem);
     };
-    
-    private final Function<SavingAccountDTO, Mono<Account>> saveSavingAccount = account -> {
 
-        Account a;
-        if (account.getSubType().equals("VI")) {
+    private final Function<CreateAccountDTO,Mono<AccountItem>> getAccountItem= createAccountDTO->
+            itemService.findByAccountType(createAccountDTO.getAccountCode())
+            .switchIfEmpty(Mono.error(EntityNotExistsException::new));
 
-            //validacion tarjeta credito
-            a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("AH", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
-                    .accountName("VIP Saving Account")
-                    .accountType("AH")
-                    .subType(account.getSubType())
-                    .valid(true)
-                    .codeBusinessPartner(account.getCodeBusinessPartner())
-                    .date_Opened(new Date()).build();
+    private final BiPredicate<CreateAccountDTO,AccountItem> isBusinessPartnerAllowed= (createAccountDTO, accountItem)->
+            accountItem.getBusinessPartnerAllowed()
+                    .contains(createAccountDTO.getCodeBusinessPartner().substring(0,1));
 
-        } else {
+    private final BiFunction<CreateAccountDTO,AccountItem, Mono<AccountItem>> validateLimitCreation = (account,accountItem) ->
 
-            a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("AH", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("AH"))
-                    .accountName("Standart Saving Account")
-                    .accountType("AH")
-                    .subType(account.getSubType())
-                    .valid(true)
-                    .codeBusinessPartner(account.getCodeBusinessPartner())
-                    .date_Opened(new Date()).build();
-        }
-        return repository.save(a);
+            repository.countByAccountTypeAndCodeBusinessPartner(account.getAccountCode(),
+                    account.getCodeBusinessPartner())
+                    .filter(count->accountItem.getLimitAccountsAllowed()>count||
+                            accountItem.getHasAccountsLimit().equals(false))
+                    .map(count->accountItem)
+                    .switchIfEmpty(Mono.error(AccountNotCreatedException::new));
+    private final BiFunction<CreateAccountDTO,AccountItem, Mono<Account>> mapToAccountAndSave = (account,accountItem) -> {
 
-    };
-    
-    private final Function<TimeDepositAccountDTO, Mono<Account>> saveTimeDepositAccount = account -> {
-
-    	  Account a = Account.builder()
-                  .accountId(AccountGeneratorValues.IdentityGenerate("PL", account.getCodeBusinessPartner()))
-                  .accountNumber(AccountGeneratorValues.NumberGenerate("PL"))
-                  .accountName("Time Deposit Account")
-                  .accountType("PL")
-                  .valid(true)
-                  .codeBusinessPartner(account.getCodeBusinessPartner())
-                  .date_Opened(new Date()).build();
-
-          return repository.save(a);
-    };
-    
-    private final Function<PeopleCheckingAccountDTO, Mono<Account>> savePeopleCheckingAccount = account ->{
-    	
-            Account a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
-                    .accountName("People Checking Account")
-                    .accountType("CO")
-                    .valid(true)
-                    .codeBusinessPartner(account.getCodeBusinessPartner())
-                    .date_Opened(new Date()).build();
-
-            return repository.save(a);
-    };
-    
-    private final Function<CompanyCheckingAccountDTO, Mono<Account>> saveCompanyCheckingAccount = account ->{
-        Account a;
-        if (account.getSubType().equals("PY")) {
-
-            //validacion tarjeta
-            a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
-                    .accountName("Pyme Company Checking Account")
-                    .accountType("CO")
-                    .valid(true)
-                    .codeBusinessPartner(account.getCodeBusinessPartner())
-                    .date_Opened(new Date()).build();
-
-        } else {
-            a = Account.builder()
-                    .accountId(AccountGeneratorValues.IdentityGenerate("CO", account.getCodeBusinessPartner()))
-                    .accountNumber(AccountGeneratorValues.NumberGenerate("CO"))
-                    .accountName("Standart Company Checking Account")
-                    .accountType("CO")
-                    .subType(account.getSubType())
-                    .valid(true)
-                    .codeBusinessPartner(account.getCodeBusinessPartner())
-                    .date_Opened(new Date()).build();
-        }
+    Account a = Account.builder()
+            .accountNumber(AccountGeneratorValues.NumberGenerate(accountItem.getAccountType()))
+            .valid(true)
+            .balance(new BigDecimal("0.00"))
+            .codeBusinessPartner(account.getCodeBusinessPartner())
+            .date_Opened(new Date())
+            .accountName(accountItem.getAccountName())
+            .accountType(accountItem.getAccountType())
+            .minDiaryAmount(accountItem.getMinDiaryAmount())
+            .maintenanceCommission(accountItem.getMaintenanceCommission())
+            .commission(accountItem.getCommission())
+            .limitTransaction(accountItem.getLimitTransaction())
+            .limitDay(accountItem.getLimitDay())
+            .creditCardIsRequired(accountItem.getCreditCardIsRequired())
+            .businessPartnerAllowed(accountItem.getBusinessPartnerAllowed())
+            .limitAccountsAllowed(accountItem.getLimitAccountsAllowed())
+            .moreHoldersAreAllowed(accountItem.getMoreHoldersAreAllowed())
+            .signersAreAllowed(accountItem.getSignersAreAllowed())
+            .hasAccountsLimit(accountItem.getHasAccountsLimit())
+            .build();
         return repository.save(a);
     };
 }

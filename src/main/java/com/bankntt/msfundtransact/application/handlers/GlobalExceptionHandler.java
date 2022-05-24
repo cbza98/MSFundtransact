@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.bankntt.msfundtransact.application.exception.EntityNotExistsException;
 import org.slf4j.MarkerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +66,23 @@ public class GlobalExceptionHandler {
 
 		log.warn(MarkerFactory.getMarker("VALID"), ex.getMessage());
 		return Mono.just(ex).map(AccountNotCreatedException::getMessage).flatMap(msg -> {
+
+			response.put("errors", msg);
+			response.put("timestamp", new Date());
+			response.put("status", HttpStatus.BAD_REQUEST.value());
+
+			return Mono.just(ResponseEntity.badRequest().body(response));
+
+		});
+	}
+
+	@ExceptionHandler(EntityNotExistsException.class)
+	public Mono<ResponseEntity<Map<String, Object>>> handlerException(EntityNotExistsException ex) {
+
+		Map<String, Object> response = new HashMap<>();
+
+		log.warn(MarkerFactory.getMarker("VALID"), ex.getMessage());
+		return Mono.just(ex).map(EntityNotExistsException::getMessage).flatMap(msg -> {
 
 			response.put("errors", msg);
 			response.put("timestamp", new Date());

@@ -21,7 +21,7 @@ public class AccountTransactionController {
     @Autowired
     private TransactionService service;
     @PostMapping("/Deposit")
-    public Mono<ResponseEntity<Map<String, Object>>> Deposit(@Valid @RequestBody Mono<AccountOperationDTO> request) {
+    public Mono<ResponseEntity<Map<String, Object>>> deposit(@Valid @RequestBody Mono<AccountOperationDTO> request) {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -33,7 +33,7 @@ public class AccountTransactionController {
         }));
     }
     @PostMapping("/Withdrawal")
-    public Mono<ResponseEntity<Map<String, Object>>> Withdrawal(@Valid @RequestBody Mono<AccountOperationDTO> request) {
+    public Mono<ResponseEntity<Map<String, Object>>> withdrawal(@Valid @RequestBody Mono<AccountOperationDTO> request) {
 
         Map<String, Object> response = new HashMap<>();
 

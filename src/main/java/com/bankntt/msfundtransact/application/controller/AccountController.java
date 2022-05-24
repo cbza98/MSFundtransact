@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import com.bankntt.msfundtransact.domain.beans.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bankntt.msfundtransact.domain.beans.CompanyCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.PeopleCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.SavingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.TimeDepositAccountDTO;
 import com.bankntt.msfundtransact.domain.entities.Account;
 import com.bankntt.msfundtransact.infraestructure.services.AccountService;
 
@@ -44,54 +41,15 @@ public class AccountController {
 	}
 
 
-	@PostMapping("/CreateSavingAccount")
-	public Mono<ResponseEntity<Map<String, Object>>> createSavingAccount(@Valid @RequestBody Mono<SavingAccountDTO> request) {
+	@PostMapping("/CreateAccount")
+	public Mono<ResponseEntity<Map<String, Object>>> createAccount(@Valid @RequestBody Mono<CreateAccountDTO> request) {
 
 		Map<String, Object> response = new HashMap<>();
 
-		return request.flatMap(a -> service.createSavingAccount(a).map(c -> {
+		return request.flatMap(a -> service.createAccount(a).map(c -> {
 			response.put("Cuenta", c);
 			response.put("mensaje", "Cuenta creada con exito");
-			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-					.contentType(MediaType.APPLICATION_JSON).body(response);
-		}));
-	}
-	
-	@PostMapping("/CreateTimeDepositAccount")
-	public Mono<ResponseEntity<Map<String, Object>>> createTimeDepositAccount(@Valid @RequestBody Mono<TimeDepositAccountDTO> request) {
-
-		Map<String, Object> response = new HashMap<>();
-
-		return request.flatMap(a -> service.createTimeDepositAccount(a).map(c -> {
-			response.put("Cuenta", c);
-			response.put("mensaje", "Cuenta creada con exito");
-			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-					.contentType(MediaType.APPLICATION_JSON).body(response);
-		}));
-	}
-	
-	@PostMapping("/CreatePeopleCheckingAccount")
-	public Mono<ResponseEntity<Map<String, Object>>> createPeopleCheckingAccount(@Valid @RequestBody Mono<PeopleCheckingAccountDTO> request) {
-
-		Map<String, Object> response = new HashMap<>();
-
-		return request.flatMap(a -> service.createPeopleCheckingAccount(a).map(c -> {
-			response.put("Cuenta", c);
-			response.put("mensaje", "Cuenta creada con exito");
-			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
-					.contentType(MediaType.APPLICATION_JSON).body(response);
-		}));
-	}
-	
-	@PostMapping("/CreateCompanyCheckingAccount")
-	public Mono<ResponseEntity<Map<String, Object>>> createCompanyCheckingAccount(@Valid @RequestBody Mono<CompanyCheckingAccountDTO> request) {
-
-		Map<String, Object> response = new HashMap<>();
-
-		return request.flatMap(a -> service.createCompanyCheckingAccount(a).map(c -> {
-			response.put("Cuenta", c);
-			response.put("mensaje", "Cuenta creada con exito");
-			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountId())))
+			return ResponseEntity.created(URI.create("/api/Account/".concat(c.getAccountNumber())))
 					.contentType(MediaType.APPLICATION_JSON).body(response);
 		}));
 	}
@@ -109,9 +67,18 @@ public class AccountController {
 	}
 
 	@DeleteMapping("/{id}")
-	public Mono<ResponseEntity<Void>> Delete(@PathVariable String id) {
-		return service.delete(id).map(r -> ResponseEntity.ok().<Void>build())
-				.defaultIfEmpty(ResponseEntity.notFound().build());
+	public Mono<ResponseEntity<Map<String, Object> >> delete(@PathVariable String id) {
+		 Map<String, Object> response = new HashMap<>();
+
+		return service.delete(id)
+				.map(c -> {
+					response.put("BusinessPartner", c);
+					response.put("mensaje", "Succesfull BusinessPartner Deleted");
+					return ResponseEntity.ok()
+							.contentType(MediaType.APPLICATION_JSON)
+							.location( URI.create("/api/BusinessPartner/".concat(c.getAccountNumber())))
+							.body(response);
+				});
 	}
 
 	

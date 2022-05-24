@@ -19,6 +19,7 @@ import com.bankntt.msfundtransact.infraestructure.interfaces.ICreditCardService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -26,7 +27,7 @@ import java.util.function.Function;
 @Service
 public class CreditCardService implements ICreditCardService {
 
-	@Autowired
+    @Autowired
     CreditCardRepository repository;
 
     @Override
@@ -41,9 +42,9 @@ public class CreditCardService implements ICreditCardService {
 
     @Override
     public Mono<CreditCard> createCreditCard(CreateCreditCardDTO _entity) {
-       return Mono.just(_entity)
+        return Mono.just(_entity)
                 .doOnNext(r -> getBusinessPartner.accept(r.getCodeBusinessPartner()))
-                .flatMap(saveCreditCard ).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
+                .flatMap(saveCreditCard).switchIfEmpty(Mono.error(new AccountNotCreatedException()));
 
     }
 
@@ -57,14 +58,15 @@ public class CreditCardService implements ICreditCardService {
     public Mono<CreditCard> findById(String Id) {
         return repository.findById(Id);
     }
-    private final Consumer<String> getBusinessPartner = businessPartnerId-> {
+
+    private final Consumer<String> getBusinessPartner = businessPartnerId -> {
 
         WebClient businessPartnerClient = WebClient.builder().baseUrl("http://localhost:9090/BusinessPartnerService")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
 
         businessPartnerClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/BusinessPartner/{id}").build(businessPartnerId))
-                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExistsException()) )
+                .retrieve().onStatus(HttpStatus::is4xxClientError, error -> Mono.error(new EntityNotExistsException()))
                 .bodyToMono(BusinessPartnerBean.class);
 
     };
@@ -73,14 +75,16 @@ public class CreditCardService implements ICreditCardService {
 
         CreditCard a;
 
-            a = CreditCard.builder()
-                    .cardNumber(CardGeneratorValues.CardNumberGenerate())
-                    .approvedline(creditCardDto.getLimit())
-                    .valid(true)
-                    .expiringDate(CardGeneratorValues.CardExpiringDateGenerate())
-                    .codeBusinessPartner(creditCardDto.getCodeBusinessPartner())
-                    .cvv(CardGeneratorValues.CardCVVGenerate())
-                    .openDate(new Date()).build();
+        a = CreditCard.builder()
+                .cardNumber(CardGeneratorValues.CardNumberGenerate())
+                .approvedline(creditCardDto.getLimit())
+                .availableline(creditCardDto.getLimit())
+                .consumedline(BigDecimal.valueOf(0.00))
+                .valid(true)
+                .expiringDate(CardGeneratorValues.CardExpiringDateGenerate())
+                .codeBusinessPartner(creditCardDto.getCodeBusinessPartner())
+                .cvv(CardGeneratorValues.CardCVVGenerate())
+                .openDate(new Date()).build();
 
         return repository.save(a);
 
