@@ -4,10 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 
-import com.bankntt.msfundtransact.domain.beans.CompanyCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.PeopleCheckingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.SavingAccountDTO;
-import com.bankntt.msfundtransact.domain.beans.TimeDepositAccountDTO;
+import com.bankntt.msfundtransact.domain.beans.*;
 import com.bankntt.msfundtransact.domain.entities.Account;
 
 import reactor.core.publisher.Flux;
@@ -16,14 +13,8 @@ import reactor.core.publisher.Mono;
 public interface IAccountService {
 	Flux<Account> findAll();
 
-	Mono<Account> createSavingAccount(SavingAccountDTO account);
-	
-	Mono<Account> createTimeDepositAccount(TimeDepositAccountDTO account);
-	
-	Mono<Account> createPeopleCheckingAccount(PeopleCheckingAccountDTO account);
-	
-	Mono<Account> createCompanyCheckingAccount(CompanyCheckingAccountDTO account);
-	
+	Mono<Account> createAccount(CreateAccountDTO account);
+
 	Mono<Account> delete(String id);
 
 	Mono<Account> findById(String id);
